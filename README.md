@@ -52,6 +52,36 @@ You can replace `{env.YOUR_IONOS_AUTH_API_TOKEN}` with the actual auth token if
 you prefer to put it directly in your config instead of an environment
 variable.
 
+## DNS Challenge with CNAME Records
+
+When using CNAME records for DNS-01 validation (e.g., to delegate ACME challenge responses to another provider like Let's Encrypt's Certbot), you may need to use the `override_domain` option to specify the actual zone where the CNAME record should be created.
+
+### JSON config
+
+```json
+{
+  "module": "acme",
+  "challenges": {
+    "dns": {
+      "provider": {
+        "name": "ionos",
+        "auth_api_token": "YOUR_IONOS_AUTH_API_TOKEN",
+        "override_domain": "example.com"
+      }
+    }
+  }
+}
+```
+
+### Caddyfile config
+
+```
+ionos {
+  api_token YOUR_IONOS_AUTH_API_TOKEN
+  override_domain example.com
+}
+```
+
 ## Authenticating
 
 See [the associated README in the libdns package](https://github.com/libdns/ionos#authenticating) 

@@ -23,7 +23,7 @@ func TestUnmarshalCaddyFileExtractsApiToken(t *testing.T) {
 		t.Run(fmt.Sprintf("test case %d", i), func(t *testing.T) {
 			// given
 			dispenser := caddyfile.NewTestDispenser(tc)
-			p := Provider{&ionos.Provider{}}
+			p := Provider{Provider: &ionos.Provider{}}
 			// when
 			err := p.UnmarshalCaddyfile(dispenser)
 			// then
@@ -41,12 +41,43 @@ func TestUnmarshalCaddyFileExtractsApiToken(t *testing.T) {
 	}
 }
 
+func TestUnmarshalCaddyFileExtractsOverrideDomain(t *testing.T) {
+	tests := []string{
+		`ionos token {
+			override_domain example.com
+		}`,
+	}
+
+	for i, tc := range tests {
+		t.Run(fmt.Sprintf("test case %d", i), func(t *testing.T) {
+			// given
+			dispenser := caddyfile.NewTestDispenser(tc)
+			p := Provider{Provider: &ionos.Provider{}}
+			// when
+			err := p.UnmarshalCaddyfile(dispenser)
+			// then
+			if err != nil {
+				t.Errorf("UnmarshalCaddyfile failed with %v", err)
+				return
+			}
+
+			expected := "example.com"
+			actual := p.OverrideDomain
+			if expected != actual {
+				t.Errorf("Expected OverrideDomain to be '%s' but got '%s'", expected, actual)
+			}
+		})
+	}
+}
+
 func TestUnmarshalCaddyFileReportsErrorConditions(t *testing.T) {
 
 	tests := []struct{ test, expected string }{
 		{"ionos token invalid", "wrong argument count"},
 		{"ionos { }", "missing api token"},
 		{`ionos token { api_token token }`, "api token already set"},
+		{`ionos token { override_domain example.com
+			override_domain other.com }`, "override domain already set"},
 		{`ionos { api_token token invalid }`, "wrong argument count"},
 		{`ionos token { invalid token }`, "unrecognized subdirective 'invalid'"},
 	}
@@ -55,7 +86,7 @@ func TestUnmarshalCaddyFileReportsErrorConditions(t *testing.T) {
 		t.Run(fmt.Sprintf("test case %d", i), func(t *testing.T) {
 			// given
 			dispenser := caddyfile.NewTestDispenser(tc.test)
-			p := Provider{&ionos.Provider{}}
+			p := Provider{Provider: &ionos.Provider{}}
 			// when
 			err := p.UnmarshalCaddyfile(dispenser)
 			// then
@@ -69,7 +100,7 @@ func TestUnmarshalCaddyFileReportsErrorConditions(t *testing.T) {
 func TestProvisionTransformsAPIToken(t *testing.T) {
 	// given
 	expected := "{value}"
-	p := Provider{&ionos.Provider{}}
+	p := Provider{Provider: &ionos.Provider{}}
 	p.AuthAPIToken = "\\{value\\}"
 	// when
 	_ = p.Provision(caddy.Context{})
